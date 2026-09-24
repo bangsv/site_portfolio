@@ -15,6 +15,8 @@ ROOT = Path(os.getenv("RULES_DIR", Path(__file__).resolve().parents[1])).resolve
 TEXT_EXTENSIONS = {".md", ".txt", ".yml", ".yaml", ".rules", ".xp", ".co", ".json", ".xml", ".log", ".js", ".ps1", ".rb"}
 SKIP_DIRS = {".git", "app", "__pycache__", ".venv", "node_modules"}
 EXCLUDED_CATALOG_FOLDERS = {"help_file", "Legitimate_Activity"}
+XP_RULE_DIR = "XP_rule_(eXtraction and Processing)"
+ALLOWED_XP_RULE_FILES = {"rule.co", "formula.xp", "normalization_event.txt"}
 IOC_SOURCE = ROOT / "IOC"
 IOC_ATTACK_MAP = {
     "eternalblue": "CVE-2017-0143_EternalBlue",
@@ -153,6 +155,14 @@ def attack_directory(attack_id: str) -> Path:
     return (ROOT / attack_id).resolve()
 
 
+def is_allowed_material(path: Path, base: Path) -> bool:
+    """Keep the XP rule bundle limited to the three approved files only."""
+    rel_parts = path.relative_to(base).parts
+    if not rel_parts or rel_parts[0] != XP_RULE_DIR:
+        return True
+    return path.name in ALLOWED_XP_RULE_FILES
+
+
 def material_files(attack_id: str) -> list[dict]:
     base = attack_directory(attack_id)
     if ROOT not in base.parents or not base.is_dir():
@@ -160,6 +170,8 @@ def material_files(attack_id: str) -> list[dict]:
     materials = []
     for source in base.rglob("*"):
         if not source.is_file() or any(part in SKIP_DIRS for part in source.relative_to(ROOT).parts):
+            continue
+        if not is_allowed_material(source, base):
             continue
         rel = source.relative_to(ROOT).as_posix()
         materials.append({
@@ -228,11 +240,18 @@ def download(path: str):
     target = (ROOT / path).resolve()
     if not target.is_file() or ROOT not in target.parents:
         raise HTTPException(404, "File not found")
-    # Only files belonging to a catalogued attack can be downloaded.
-    allowed = any(target.is_relative_to(attack_directory(attack_id)) for attack_id in catalog()["attacks"])
-    if not allowed:
-        raise HTTPException(404, "File not found")
-    return FileResponse(target, filename=target.name, content_disposition_type="attachment")
+
+    for attack_id in catalog()["attacks"]:
+        base = attack_directory(attack_id)
+        try:
+            rel = target.relative_to(base)
+        except ValueError:
+            continue
+        if rel.parts and rel.parts[0] == XP_RULE_DIR and target.name not in ALLOWED_XP_RULE_FILES:
+            raise HTTPException(404, "File not found")
+        return FileResponse(target, filename=target.name, content_disposition_type="attachment")
+
+    raise HTTPException(404, "File not found")
 
 
 @app.get("/api/readmes")
