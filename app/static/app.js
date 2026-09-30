@@ -7,18 +7,46 @@ function metric(n, label) { return `<div><strong>${n}</strong><span>${label}</sp
 function fileSize(bytes) { if (bytes < 1024) return `${bytes} Б`; const units = ['КБ', 'МБ', 'ГБ']; let value = bytes / 1024, unit = 0; while (value >= 1024 && unit < units.length - 1) { value /= 1024; unit++; } return `${value.toFixed(value >= 10 ? 0 : 1)} ${units[unit]}`; }
 function renderAttack(a) { return `<button class="attack-card" data-attack="${encodeURIComponent(a.id)}"><span class="card-top"><em>◈</em><small>${a.files} README</small></span><h3>${esc(a.title)}</h3><p>${a.ioc_count} индикаторов</p><span class="card-arrow">Смотреть IOC →</span></button>`; }
 function attackBadge(a) { return `<span class="attack-badge">${esc(a.title)}</span>`; }
+function renderIocHelp(text) {
+  return esc(text)
+    .replace(/`([^`\n]+)`/g, '<code>$1</code>')
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/(?:^|\n)•\s*/g, '<br><span class="ioc-help-bullet">•</span> ')
+    .replace(/\n/g, '<br>');
+}
 
 async function showAttack(id) {
   const panel = $('#attack-detail'); panel.innerHTML = '<div class="loader">Загрузка индикаторов…</div>'; panel.hidden = false;
   const data = await api('/api/attacks/' + encodeURIComponent(id));
-  panel.innerHTML = `<div class="intel-title"><div><p class="eyebrow">IOC INVENTORY</p><h3>${esc(data.title)}</h3><p>${data.ioc_count} индикаторов, сгруппированных по типу</p></div><button class="close-intel" aria-label="Закрыть">×</button></div><div class="ioc-groups">${data.ioc_groups.map(g => `<section class="ioc-group"><h4>${esc(g.type)} <span>${g.items.length}</span></h4><div class="ioc-list">${g.items.map(i => `<code title="${esc(i.value)}">${esc(i.value)}</code>`).join('')}</div></section>`).join('')}</div><details class="materials"><summary><span>Материалы сценария</span><small>${data.materials.length} файлов</small></summary><div class="material-list">${data.materials.map(f => `<a href="/api/download?path=${encodeURIComponent(f.path)}" class="material" download><span class="file-kind">${esc(f.kind)}</span><span class="file-name" title="${esc(f.path)}">${esc(f.path)}</span><small>${fileSize(f.size)}</small><b>↓</b></a>`).join('')}</div></details>${data.readmes[0] ? `<button class="open-doc" data-readme="${encodeURIComponent(data.readmes[0])}">Открыть документацию атаки →</button>` : ''}`;
+  panel.innerHTML = `<div class="intel-title"><div><p class="eyebrow">IOC INVENTORY</p><h3>${esc(data.title)}</h3><p>${data.ioc_count} индикаторов · Host IOC и Network IOC</p></div><button class="close-intel" aria-label="Закрыть">×</button></div><p class="ioc-hint"><span>i</span> Нажмите на индикатор, чтобы открыть пояснение из базы IOC.</p><div class="ioc-groups">${data.ioc_groups.map(g => `<section class="ioc-group"><h4>${esc(g.type)} <span>${g.items.length}</span></h4>${g.items.length ? `<div class="ioc-list">${g.items.map(i => `<div class="ioc-item"><div class="ioc-popover" role="tooltip" hidden><span class="ioc-popover-kicker">СПРАВКА ПО IOC</span><p>${renderIocHelp(i.description)}</p></div><button type="button" class="ioc-trigger${i.important ? ' is-important' : ''}" aria-label="Показать справку: ${esc(i.value)}" aria-expanded="false" data-description="${esc(i.description)}"><code>${esc(i.value)}</code><span class="ioc-info" aria-hidden="true">i</span></button></div>`).join('')}</div>` : '<p class="ioc-empty">Для этого типа индикаторы не указаны.</p>'}</section>`).join('')}</div><details class="materials"><summary><span>Материалы сценария</span><small>${data.materials.length} файлов</small></summary><div class="material-list">${data.materials.map(f => `<a href="/api/download?path=${encodeURIComponent(f.path)}" class="material" download><span class="file-kind">${esc(f.kind)}</span><span class="file-name" title="${esc(f.path)}">${esc(f.path)}</span><small>${fileSize(f.size)}</small><b>↓</b></a>`).join('')}</div></details>${data.readmes[0] ? `<button class="open-doc" data-readme="${encodeURIComponent(data.readmes[0])}">Открыть документацию атаки →</button>` : ''}`;
   panel.scrollIntoView({behavior: 'smooth', block: 'nearest'});
 }
 
 async function loadDocument(path) {
   const doc = $('#document'); doc.innerHTML = '<div class="loader">Загрузка документа…</div>';
-  try { const data = await api('/api/readme?path=' + encodeURIComponent(path)); doc.innerHTML = `<div class="doc-path">${esc(data.path)}</div>${data.html}`; history.replaceState(null, '', '#knowledge'); doc.scrollIntoView({behavior:'smooth', block:'start'}); }
+  try {
+    const data = await api('/api/readme?path=' + encodeURIComponent(path));
+    doc.innerHTML = `<div class="doc-path">${esc(data.path)}</div>${data.html}`;
+    doc.querySelectorAll('img').forEach(image => {
+      image.classList.add('document-image');
+      image.loading = 'lazy';
+      image.decoding = 'async';
+      image.tabIndex = 0;
+      image.setAttribute('role', 'button');
+      image.setAttribute('aria-label', `Увеличить изображение: ${image.alt || 'Скриншот из документа'}`);
+    });
+    history.replaceState(null, '', '#knowledge'); doc.scrollIntoView({behavior:'smooth', block:'start'});
+  }
   catch { doc.innerHTML = '<div class="document-empty"><h3>Документ не найден</h3></div>'; }
+}
+
+function openImageViewer(image) {
+  const viewer = $('#image-viewer');
+  const enlarged = viewer.querySelector('img');
+  enlarged.src = image.currentSrc || image.src;
+  enlarged.alt = image.alt || 'Увеличенное изображение';
+  viewer.querySelector('p').textContent = image.alt || 'Нажмите вне изображения или Esc, чтобы закрыть.';
+  viewer.showModal();
 }
 
 async function search(q) {
@@ -35,15 +63,51 @@ async function init() {
   const data = await api('/api/summary');
   $('#metrics').innerHTML = metric(data.attacks,'сценариев') + metric(data.iocs,'IOC в индексе') + metric(data.readmes,'README');
   $('#attacks').innerHTML = data.items.sort((a,b) => a.title.localeCompare(b.title)).map(renderAttack).join('');
-  const docs = await api('/api/readmes');
+  const docs = data.readme_items;
   $('#readme-nav').innerHTML = `<p>ДОКУМЕНТЫ <span>${docs.length}</span></p>` + docs.map(d => `<button data-readme="${encodeURIComponent(d.path)}"><small>${esc(d.title)}</small><span>${esc(d.path.split('/').slice(1,-1).join(' / ') || 'Общее')}</span></button>`).join('');
 }
 document.addEventListener('click', e => {
+  if (e.target.matches('#document img')) return openImageViewer(e.target);
+  if (e.target.closest('.image-viewer-close')) return $('#image-viewer').close();
+  if (e.target.matches('#image-viewer')) return $('#image-viewer').close();
+  const iocTrigger = e.target.closest('.ioc-trigger');
+  if (iocTrigger) {
+    const item = iocTrigger.closest('.ioc-item');
+    const wasOpen = !item.querySelector('.ioc-popover').hidden;
+    document.querySelectorAll('.ioc-popover').forEach(popover => { popover.hidden = true; });
+    document.querySelectorAll('.ioc-trigger').forEach(trigger => { trigger.setAttribute('aria-expanded', 'false'); });
+    document.querySelectorAll('.ioc-item').forEach(entry => entry.classList.remove('popover-below', 'popover-align-right'));
+    if (!wasOpen) {
+      const popover = item.querySelector('.ioc-popover');
+      popover.hidden = false;
+      iocTrigger.setAttribute('aria-expanded', 'true');
+      const bounds = popover.getBoundingClientRect();
+      if (bounds.top < 12) item.classList.add('popover-below');
+      if (bounds.right > window.innerWidth - 12) item.classList.add('popover-align-right');
+    }
+    return;
+  }
+  if (!e.target.closest('.ioc-item')) {
+    document.querySelectorAll('.ioc-popover').forEach(popover => { popover.hidden = true; });
+    document.querySelectorAll('.ioc-trigger').forEach(trigger => { trigger.setAttribute('aria-expanded', 'false'); });
+  }
   const readme = e.target.closest('[data-readme]'); if (readme?.dataset.readme) return loadDocument(decodeURIComponent(readme.dataset.readme));
   const attack = e.target.closest('[data-attack]'); if (attack?.dataset.attack) return showAttack(decodeURIComponent(attack.dataset.attack));
   if (e.target.closest('.close-intel')) $('#attack-detail').hidden = true;
 });
+document.addEventListener('keydown', e => {
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('#document img')) {
+    e.preventDefault();
+    openImageViewer(e.target);
+  }
+});
+$('#image-viewer').addEventListener('close', () => {
+  const image = $('#image-viewer img');
+  image.removeAttribute('src');
+  image.alt = '';
+  $('#image-viewer p').textContent = '';
+});
 $('#ioc-search').addEventListener('input', e => { clearTimeout(timer); timer = setTimeout(() => search(e.target.value), 220); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { $('#ioc-search').value = ''; $('#ioc-search').blur(); search(''); } });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { document.querySelectorAll('.ioc-popover').forEach(popover => { popover.hidden = true; }); document.querySelectorAll('.ioc-trigger').forEach(trigger => { trigger.setAttribute('aria-expanded', 'false'); }); $('#ioc-search').value = ''; $('#ioc-search').blur(); search(''); } });
 $('#reindex').addEventListener('click', async () => { $('#reindex').classList.add('spin'); await api('/api/reindex', {method:'POST'}); $('#reindex').classList.remove('spin'); init(); });
 init();

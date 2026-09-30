@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import os
 import re
-from collections import defaultdict
 from functools import lru_cache
 from pathlib import Path
 
@@ -24,6 +23,7 @@ IOC_ATTACK_MAP = {
     "petitpotam": "CVE-2021-36942_PetitPotam",
     "dcsync": "DCSync",
     "nginx ui": "CVE-2026-27944_Nginx UI",
+    "cve-2025-33073": "CVE-2025-33073",
 }
 IOC_RE = re.compile(
     r"\bCVE-\d{4}-\d{4,7}\b|\bT\d{4}(?:\.\d{3})?\b|"
@@ -101,17 +101,70 @@ def load_iocs_from_source(attacks: dict, iocs: dict) -> None:
         heading, _, body = section.partition("\n")
         attack_id = IOC_ATTACK_MAP.get(heading.strip().casefold())
         attack = attacks.get(attack_id)
+        if attack_id == "CVE-2025-33073" and not attack:
+            attack = attacks[attack_id] = {
+                "id": attack_id,
+                "title": "CVE-2025-33073 · лабораторный сценарий",
+                "files": 0,
+                "readmes": [],
+                "iocs": {},
+                "ioc_groups": {"Host IOC": [], "Network IOC": []},
+            }
         if not attack:
             continue
-        for raw in re.findall(r"`([^`\n]{1,120})`", body):
-            value = raw.strip().rstrip(".,;:)")
-            if not value:
-                continue
-            category = classify_ioc(value) or "Контекстный индикатор"
-            key = value.casefold()
-            attack["iocs"].setdefault(key, {"value": value, "type": category})
-            record = iocs.setdefault(key, {"value": value, "type": category, "attacks": set()})
-            record["attacks"].add(attack_id)
+        group_parts = re.split(
+            r"(?im)^\*\*(Host IOC|Network\s*/\s*HTTP IOC|Network IOC)\*\*\s*$",
+            body,
+        )
+        for label, group_body in zip(group_parts[1::2], group_parts[2::2]):
+            category = "Host IOC" if label.casefold().startswith("host") else "Network IOC"
+            entries = []
+            current = []
+            for line in group_body.splitlines():
+                numbered = re.match(r"^\s*\d+\.\s+(.*)", line)
+                if numbered:
+                    if current:
+                        entries.append(current)
+                    current = [numbered.group(1)]
+                elif current:
+                    current.append(line)
+            if current:
+                entries.append(current)
+
+            for lines in entries:
+                first_line = lines[0].strip()
+                delimiter = re.search(r"\s(?:—|–|-)\s", first_line)
+                if delimiter:
+                    label_text = first_line[:delimiter.start()]
+                    detail_text = first_line[delimiter.end():].strip()
+                else:
+                    label_text = first_line
+                    detail_text = ""
+
+                code_label = re.search(r"`([^`\n]+)`", label_text)
+                value = code_label.group(1) if code_label and delimiter else re.sub(r"[`*_❗]", "", label_text)
+                value = re.sub(r"\s+", " ", value).strip(" :—–-")
+                if not value:
+                    continue
+
+                details = [detail_text] if detail_text else []
+                for continuation in lines[1:]:
+                    nested = continuation.strip()
+                    if nested:
+                        nested = re.sub(r"^(?:\*|-|\d+\.)\s+", "", nested)
+                        details.append(f"• {nested}")
+                description = "\n".join(details).strip() or first_line
+                indicator = {
+                    "value": value,
+                    "type": category,
+                    "description": description,
+                    "important": "❗" in "\n".join(lines),
+                }
+                attack["ioc_groups"][category].append(indicator)
+                key = value.casefold()
+                attack["iocs"].setdefault(key, indicator)
+                record = iocs.setdefault(key, {**indicator, "attacks": set()})
+                record["attacks"].add(attack_id)
 
 
 @lru_cache(maxsize=1)
@@ -119,35 +172,34 @@ def catalog() -> dict:
     attacks: dict[str, dict] = {}
     iocs: dict[str, dict] = {}
     readmes = []
-    for file in ROOT.rglob("*"):
-        if not file.is_file() or any(part in SKIP_DIRS for part in file.relative_to(ROOT).parts):
-            continue
-        rel = file.relative_to(ROOT).as_posix()
-        parts = file.relative_to(ROOT).parts
-        if file.name.lower() != "readme.md":
-            continue
-        attack_info = attack_from_readme(parts)
-        try:
-            content = readable(file)
-        except OSError:
-            continue
-        if attack_info:
-            attack_id, title = attack_info
-            attack = attacks.setdefault(attack_id, {"id": attack_id, "title": title, "files": 0, "readmes": [], "iocs": {}})
-            attack["files"] += 1
-        if attack_info:
-            attack["readmes"].append(rel)
-            readmes.append({"path": rel, "attack": attack_id, "title": attack["title"]})
-        elif parts[0] not in EXCLUDED_CATALOG_FOLDERS and parts[0] != "AD_CS_ESC":
-            # Overview documents remain readable, but never become attack cards or IOC sources.
-            title = "Обзор репозитория" if len(parts) == 1 else attack_name(parts[0]) + " · обзор"
-            readmes.append({"path": rel, "attack": "", "title": title})
+    excluded_dirs = SKIP_DIRS | EXCLUDED_CATALOG_FOLDERS | {"AD_CS_ESC"}
+    for current, directories, filenames in os.walk(ROOT):
+        directories[:] = [name for name in directories if name not in excluded_dirs]
+        folder = Path(current)
+        for filename in filenames:
+            if filename.lower() != "readme.md":
+                continue
+            file = folder / filename
+            rel = file.relative_to(ROOT).as_posix()
+            parts = file.relative_to(ROOT).parts
+            attack_info = attack_from_readme(parts)
+            if attack_info:
+                attack_id, title = attack_info
+                attack = attacks.setdefault(attack_id, {
+                    "id": attack_id, "title": title, "files": 0, "readmes": [], "iocs": {},
+                    "ioc_groups": {"Host IOC": [], "Network IOC": []},
+                })
+                attack["files"] += 1
+                attack["readmes"].append(rel)
+                readmes.append({"path": rel, "attack": attack_id, "title": attack["title"]})
+            elif len(parts) == 1:
+                readmes.append({"path": rel, "attack": "", "title": "Обзор репозитория"})
     load_iocs_from_source(attacks, iocs)
     return {"attacks": attacks, "iocs": iocs, "readmes": readmes}
 
 
 def public_attack(item: dict) -> dict:
-    return {"id": item["id"], "title": item["title"], "files": item["files"], "ioc_count": len(item["iocs"]), "readmes": item["readmes"]}
+    return {"id": item["id"], "title": item["title"], "files": item["files"], "ioc_count": sum(len(group) for group in item["ioc_groups"].values()), "readmes": item["readmes"]}
 
 
 def attack_directory(attack_id: str) -> Path:
@@ -196,7 +248,13 @@ def about():
 @app.get("/api/summary")
 def summary():
     data = catalog()
-    return {"attacks": len(data["attacks"]), "iocs": len(data["iocs"]), "readmes": len(data["readmes"]), "items": [public_attack(x) for x in data["attacks"].values()]}
+    return {
+        "attacks": len(data["attacks"]),
+        "iocs": len(data["iocs"]),
+        "readmes": len(data["readmes"]),
+        "items": [public_attack(x) for x in data["attacks"].values()],
+        "readme_items": data["readmes"],
+    }
 
 
 @app.get("/api/search")
@@ -205,7 +263,7 @@ def search(q: str = Query(min_length=1, max_length=200)):
     data = catalog()
     matches = []
     for key, record in data["iocs"].items():
-        if needle in key:
+        if needle in key or needle in record.get("description", "").casefold():
             matches.append({
                 "ioc": record["value"], "type": record["type"],
                 "attacks": [public_attack(data["attacks"][x]) for x in sorted(record["attacks"])],
@@ -224,14 +282,14 @@ def attack_detail(attack_id: str):
     item = catalog()["attacks"].get(attack_id)
     if not item:
         raise HTTPException(404, "Attack not found")
-    groups: dict[str, list[dict]] = defaultdict(list)
-    for indicator in item["iocs"].values():
-        groups[indicator["type"]].append(indicator)
     materials = material_files(attack_id)
     return {
         **public_attack(item),
         "materials": materials,
-        "ioc_groups": [{"type": name, "items": sorted(values, key=lambda x: x["value"].casefold())} for name, values in sorted(groups.items())],
+        "ioc_groups": [
+            {"type": name, "items": item["ioc_groups"][name]}
+            for name in ("Host IOC", "Network IOC")
+        ],
     }
 
 
