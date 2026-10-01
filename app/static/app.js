@@ -82,8 +82,21 @@ document.addEventListener('click', e => {
       popover.hidden = false;
       iocTrigger.setAttribute('aria-expanded', 'true');
       const bounds = popover.getBoundingClientRect();
-      if (bounds.top < 12) item.classList.add('popover-below');
-      if (bounds.right > window.innerWidth - 12) item.classList.add('popover-align-right');
+      const triggerBounds = iocTrigger.getBoundingClientRect();
+      const edge = 12;
+      const left = Math.max(edge, Math.min(triggerBounds.left, window.innerWidth - bounds.width - edge));
+      const above = triggerBounds.top - bounds.height - edge;
+      const below = triggerBounds.bottom + edge;
+      const maxTop = Math.max(edge, window.innerHeight - bounds.height - edge);
+      const top = above >= edge && above <= maxTop
+        ? above
+        : below <= maxTop
+          ? below
+          : Math.max(edge, Math.min(above, maxTop));
+      popover.style.left = `${left}px`;
+      popover.style.top = `${top}px`;
+      popover.style.setProperty('--ioc-arrow-x', `${Math.max(18, Math.min(triggerBounds.left + 18 - left, bounds.width - 18))}px`);
+      if (top !== above) item.classList.add('popover-below');
     }
     return;
   }
