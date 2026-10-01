@@ -1,5 +1,6 @@
 const $ = (s) => document.querySelector(s);
 let timer;
+let activeIocPopover = null;
 const esc = (s) => String(s).replace(/[&<>"']/g, x => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[x]));
 
 async function api(url, opts) { const r = await fetch(url, opts); if (!r.ok) throw new Error('Request failed'); return r.json(); }
@@ -13,6 +14,45 @@ function renderIocHelp(text) {
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
     .replace(/(?:^|\n)•\s*/g, '<br><span class="ioc-help-bullet">•</span> ')
     .replace(/\n/g, '<br>');
+}
+
+function closeIocPopover() {
+  if (!activeIocPopover) return;
+  activeIocPopover.popover.hidden = true;
+  activeIocPopover.trigger.setAttribute('aria-expanded', 'false');
+  activeIocPopover.item.classList.remove('popover-below', 'popover-align-right');
+  activeIocPopover = null;
+}
+
+function positionIocPopover() {
+  if (!activeIocPopover) return;
+  const {item, trigger, popover} = activeIocPopover;
+  const anchor = trigger.getBoundingClientRect();
+  const viewportHeight = window.visualViewport?.height || window.innerHeight;
+  const viewportWidth = window.visualViewport?.width || window.innerWidth;
+  if (anchor.bottom <= 0 || anchor.top >= viewportHeight || anchor.right <= 0 || anchor.left >= viewportWidth) {
+    closeIocPopover();
+    return;
+  }
+
+  const edge = 12;
+  const gap = 10;
+  const availableAbove = Math.max(0, anchor.top - edge - gap);
+  const availableBelow = Math.max(0, viewportHeight - anchor.bottom - edge - gap);
+  const showAbove = availableAbove >= availableBelow;
+  const availableHeight = Math.max(96, showAbove ? availableAbove : availableBelow);
+  popover.style.maxHeight = `${availableHeight}px`;
+  const bounds = popover.getBoundingClientRect();
+  const left = Math.max(edge, Math.min(anchor.left, viewportWidth - bounds.width - edge));
+  const top = showAbove
+    ? Math.max(edge, anchor.top - bounds.height - gap)
+    : Math.min(viewportHeight - bounds.height - edge, anchor.bottom + gap);
+
+  popover.style.left = `${left}px`;
+  popover.style.top = `${top}px`;
+  popover.style.setProperty('--ioc-arrow-x', `${Math.max(18, Math.min(anchor.left + 18 - left, bounds.width - 18))}px`);
+  item.classList.toggle('popover-below', !showAbove);
+  item.classList.toggle('popover-align-right', anchor.left + bounds.width > viewportWidth - edge);
 }
 
 async function showAttack(id) {
@@ -74,35 +114,18 @@ document.addEventListener('click', e => {
   if (iocTrigger) {
     const item = iocTrigger.closest('.ioc-item');
     const wasOpen = !item.querySelector('.ioc-popover').hidden;
-    document.querySelectorAll('.ioc-popover').forEach(popover => { popover.hidden = true; });
-    document.querySelectorAll('.ioc-trigger').forEach(trigger => { trigger.setAttribute('aria-expanded', 'false'); });
-    document.querySelectorAll('.ioc-item').forEach(entry => entry.classList.remove('popover-below', 'popover-align-right'));
+    closeIocPopover();
     if (!wasOpen) {
       const popover = item.querySelector('.ioc-popover');
       popover.hidden = false;
       iocTrigger.setAttribute('aria-expanded', 'true');
-      const bounds = popover.getBoundingClientRect();
-      const triggerBounds = iocTrigger.getBoundingClientRect();
-      const edge = 12;
-      const left = Math.max(edge, Math.min(triggerBounds.left, window.innerWidth - bounds.width - edge));
-      const above = triggerBounds.top - bounds.height - edge;
-      const below = triggerBounds.bottom + edge;
-      const maxTop = Math.max(edge, window.innerHeight - bounds.height - edge);
-      const top = above >= edge && above <= maxTop
-        ? above
-        : below <= maxTop
-          ? below
-          : Math.max(edge, Math.min(above, maxTop));
-      popover.style.left = `${left}px`;
-      popover.style.top = `${top}px`;
-      popover.style.setProperty('--ioc-arrow-x', `${Math.max(18, Math.min(triggerBounds.left + 18 - left, bounds.width - 18))}px`);
-      if (top !== above) item.classList.add('popover-below');
+      activeIocPopover = {item, trigger: iocTrigger, popover};
+      positionIocPopover();
     }
     return;
   }
   if (!e.target.closest('.ioc-item')) {
-    document.querySelectorAll('.ioc-popover').forEach(popover => { popover.hidden = true; });
-    document.querySelectorAll('.ioc-trigger').forEach(trigger => { trigger.setAttribute('aria-expanded', 'false'); });
+    closeIocPopover();
   }
   const readme = e.target.closest('[data-readme]'); if (readme?.dataset.readme) return loadDocument(decodeURIComponent(readme.dataset.readme));
   const attack = e.target.closest('[data-attack]'); if (attack?.dataset.attack) return showAttack(decodeURIComponent(attack.dataset.attack));
@@ -121,6 +144,10 @@ $('#image-viewer').addEventListener('close', () => {
   $('#image-viewer p').textContent = '';
 });
 $('#ioc-search').addEventListener('input', e => { clearTimeout(timer); timer = setTimeout(() => search(e.target.value), 220); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { document.querySelectorAll('.ioc-popover').forEach(popover => { popover.hidden = true; }); document.querySelectorAll('.ioc-trigger').forEach(trigger => { trigger.setAttribute('aria-expanded', 'false'); }); $('#ioc-search').value = ''; $('#ioc-search').blur(); search(''); } });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeIocPopover(); $('#ioc-search').value = ''; $('#ioc-search').blur(); search(''); } });
+document.addEventListener('scroll', positionIocPopover, {capture: true, passive: true});
+window.addEventListener('resize', positionIocPopover, {passive: true});
+window.visualViewport?.addEventListener('resize', positionIocPopover, {passive: true});
+window.visualViewport?.addEventListener('scroll', positionIocPopover, {passive: true});
 $('#reindex').addEventListener('click', async () => { $('#reindex').classList.add('spin'); await api('/api/reindex', {method:'POST'}); $('#reindex').classList.remove('spin'); init(); });
 init();
